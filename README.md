@@ -12,5 +12,6 @@ With "bob" you can :
 * launch a differential backups
 
 ### Requirement 
+* bash => 4
 * a google storage acount
 * gsutil
