@@ -13,5 +13,5 @@ With "bob" you can :
 
 ### Requirement 
 * bash => 4
-* a google storage acount
+* a google storage account
 * gsutil
