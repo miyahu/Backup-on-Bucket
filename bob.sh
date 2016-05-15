@@ -16,7 +16,7 @@ SCRIPT_NAME=$(basename $0)
 LOG_FILE=$(mktemp --suffix=${SCRIPT_NAME/.sh/})
 
 usage() {
-	echo "help !!!"
+	echo -e "bucket AND\n\tcreate OR list OR delete\nbackup AND\n\tstart OR stop"
 }
 
 function cleanning {
@@ -31,30 +31,32 @@ function error_with_exit {
 }
 
 function verify_args {
-	echo "$# args are $1 ou $@"
-	#NB_ARGS="$#"
-	#if (( $NB_ARGS <= 0 )) ; then
-	#	exit 2
-	#fi 
+	echo "$# args are $1 ou $* ou $@"
+	NB_ARGS="$#"
+	NB_ARGS_EXPECT=${@: -1}
+	if (( $NB_ARGS < $NB_ARGS_EXPECT )) ; then
+		echo "problem"
+		exit 2
+	fi 
 }
 
 function create_bucket {
-	BUCKET_NAME=$1
+	BUCKET_NAME=$3
 	if ! gsutil mb -c $TYPE -l $LOCALISATION -p $PROJECT_ID gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	fi
 }
 
 function activate_versioning {
-	BUCKET_NAME=$1
+	BUCKET_NAME=$3
 	if ! gsutil versioning set on gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	fi
 }
 
 function activate_lifecycle {
-	BUCKET_NAME=$1
-	LIFECYCLE_CONFIG_FILE=${$2:-lifecycle_config.json}
+	BUCKET_NAME=$3
+	LIFECYCLE_CONFIG_FILE=${$4:-lifecycle_config.json}
 	if [ ! -e $2 ] ; then 
 		false
 	else
@@ -65,20 +67,21 @@ function activate_lifecycle {
 }	
 
 function if_bucket_exist {
-	BUCKET_NAME=$2
+	BUCKET_NAME=$3
 	if ! gsutil ls -b gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	fi
 }	
 		
 function delete_bucket {
+	BUCKET_NAME=$3
 	if ! if_bucket_exist ${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	else
 		if ! gsutil rb gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 			error_with_exit
 		else
-			true
+			echo ""
 		fi
 	fi
 }
@@ -87,21 +90,21 @@ case "$1" in
 
 	bucket)
 
-		case "$1" in 
+		case "$2" in 
 
 			create)
-				verify_args "$#"
-				create_bucket $2	
+				verify_args "$@" 4
+				create_bucket "$@"	
 			;;
 
 			list)
-				verify_args "$#"
-				if_bucket_exist $2
+				verify_args "$@" 4
+				if_bucket_exist "$@"
 			;;
 
 			delete)
-				verify_args "$#"
-				delete_bucket $2
+				verify_args "$@" 4
+				delete_bucket "$@"
 			;;
 
 			*)
