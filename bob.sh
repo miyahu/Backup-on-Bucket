@@ -16,7 +16,7 @@ SCRIPT_NAME=$(basename $0)
 LOG_FILE=$(mktemp --suffix=${SCRIPT_NAME/.sh/})
 
 usage() {
-	echo -e "bucket AND\n\tcreate OR list OR delete\nbackup AND\n\tstart OR stop"
+	echo -e "bucket AND\n\tcreate \"bucket name\"\n\tlist \"bucket name\"\n\tdelete \"bucket name\"\nbackup AND\n\tstart OR stop"
 }
 
 function cleanning {
@@ -78,6 +78,7 @@ function delete_bucket {
 	if ! if_bucket_exist ${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	else
+		BUCKET_NAME=$3
 		if ! gsutil rb gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 			error_with_exit
 		else
@@ -87,35 +88,32 @@ function delete_bucket {
 }
 
 case "$1" in 
-
 	bucket)
-
 		case "$2" in 
-
 			create)
 				verify_args "$@" 4
 				create_bucket "$@"	
 			;;
-
 			list)
 				verify_args "$@" 4
 				if_bucket_exist "$@"
 			;;
-
 			delete)
 				verify_args "$@" 4
 				delete_bucket "$@"
 			;;
-
 			*)
 				usage
 			;;
 		esac
 	;;
-
 	backup)
+		case "$2" in 
+			start)
+				verify_args "$@" 4
+			;;
+		esac
 	;;
-
 	*)
 		usage
 	;;
