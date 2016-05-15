@@ -2,9 +2,9 @@
 
 # bob is Backup On Bucket ...
 
-CONFIG_FILE=bob-config
+CONFIG_FILE=.bobconfig
 
-if [ ! -e ~/$CONFIG_FILE ] ; then
+if [ ! -e ./$CONFIG_FILE ] ; then
 	echo "Unable to load config" ;
 	exit 2
 else  
@@ -16,7 +16,7 @@ SCRIPT_NAME=$(basename $0)
 LOG_FILE=$(mktemp --suffix=${SCRIPT_NAME/.sh/})
 
 usage() {
-	echo -e "bucket AND\n\tcreate \"bucket name\"\n\tlist \"bucket name\"\n\tdelete \"bucket name\"\nbackup AND\n\tstart OR stop"
+	echo -e "bucket AND\n\tcreate \"bucket name\"\n\tlist \"bucket name\" OR "all"\n\tdelete \"bucket name\"\nbackup AND\n\tstart OR stop"
 }
 
 function cleanning {
@@ -44,6 +44,10 @@ function create_bucket {
 	BUCKET_NAME=$3
 	if ! gsutil mb -c $TYPE -l $LOCALISATION -p $PROJECT_ID gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
+	else
+		if ! gsutil ls -Lb gs://pouetpouet | grep -E "Storage|Versioning|Lifecycle" ; then
+			error_with_exit
+		fi
 	fi
 }
 
@@ -95,7 +99,7 @@ case "$1" in
 				create_bucket "$@"	
 			;;
 			list)
-				verify_args "$@" 4
+				verify_args "$@" 3
 				if_bucket_exist "$@"
 			;;
 			delete)
