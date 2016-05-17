@@ -19,18 +19,18 @@ usage() {
 	echo -e "bucket AND\n\tcreate \"bucket name\"\n\tlist \"bucket name\" OR "all"\n\tdelete \"bucket name\"\nbackup AND\n\tstart OR stop"
 }
 
-function cleanning {
+cleanning() {
 	rm -f $LOG_FILE
 }
 
 trap cleanning EXIT
 
-function error_with_exit {
+error_with_exit() {
 	cat $LOG_FILE
 	exit 2
 }
 
-function verify_args {
+verify_args() {
 	echo "$# args are $1 ou $* ou $@"
 	NB_ARGS="$#"
 	NB_ARGS_EXPECT=${@: -1}
@@ -40,7 +40,7 @@ function verify_args {
 	fi 
 }
 
-function create_bucket {
+create_bucket() {
 	BUCKET_NAME=$3
 	if ! gsutil mb -c $TYPE -l $LOCALISATION -p $PROJECT_ID gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
@@ -51,14 +51,14 @@ function create_bucket {
 	fi
 }
 
-function activate_versioning {
+activate_versioning() {
 	BUCKET_NAME=$3
 	if ! gsutil versioning set on gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	fi
 }
 
-function activate_lifecycle {
+activate_lifecycle() {
 	BUCKET_NAME=$3
 	LIFECYCLE_CONFIG_FILE=${$4:-lifecycle_config.json}
 	if [ ! -e $2 ] ; then 
@@ -70,14 +70,14 @@ function activate_lifecycle {
 	fi
 }	
 
-function if_bucket_exist {
+if_bucket_exist() {
 	BUCKET_NAME=$3
 	if ! gsutil ls -b gs://${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
 	fi
 }	
 		
-function delete_bucket {
+delete_bucket() {
 	BUCKET_NAME=$3
 	if ! if_bucket_exist ${BUCKET_NAME} 2>> $LOG_FILE ; then
 		error_with_exit
@@ -91,6 +91,10 @@ function delete_bucket {
 	fi
 }
 
+backup_on_bucket() {
+	if_bucket_exist
+	
+}
 case "$1" in 
 	bucket)
 		case "$2" in 
@@ -113,8 +117,17 @@ case "$1" in
 	;;
 	backup)
 		case "$2" in 
-			start)
+			sync)
 				verify_args "$@" 4
+				create_bucket "$@"	
+			;;
+			cp)
+				verify_args "$@" 4
+				create_bucket "$@"	
+			;;
+			*|-h|--help)
+				verify_args "$@" 4
+				create_bucket "$@"	
 			;;
 		esac
 	;;
